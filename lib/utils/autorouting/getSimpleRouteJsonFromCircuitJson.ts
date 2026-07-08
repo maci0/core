@@ -166,11 +166,15 @@ export const getSimpleRouteJsonFromCircuitJson = ({
   })
 
   // Add every equivalent ID from the shared connectivity map to each obstacle.
+  // Deduplicate: the connectivity map returns the seed ids too, so a plain push
+  // doubles every entry and bloats the SimpleRouteJson handed to the autorouter.
   for (const obstacle of obstacles) {
     const additionalIds = obstacle.connectedTo.flatMap((id) =>
       sharedConnMap.getIdsConnectedToNet(id),
     )
-    obstacle.connectedTo.push(...additionalIds)
+    obstacle.connectedTo = [
+      ...new Set([...obstacle.connectedTo, ...additionalIds]),
+    ]
   }
 
   // Build mapping from source_port_id to internal connection ID for interconnects
